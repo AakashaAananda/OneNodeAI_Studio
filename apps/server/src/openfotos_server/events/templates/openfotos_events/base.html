@@ -1,0 +1,32 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>{% block title %}OneNodeAI Studio{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'openfotos_events/app.css' %}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block header %}
+    <header class="site-header">
+      <a class="brand" href="{% url 'events:portfolio' %}">OneNodeAI Studio</a>
+    </header>
+  {% endblock %}
+  {% block hero %}{% endblock %}
+  <main class="page-shell">
+    <div class="messages" data-dashboard-fragment="messages" aria-live="polite">
+      {% for message in messages %}<p class="message {{ message.tags }}">{{ message }}</p>{% endfor %}
+    </div>
+    {% block content %}{% endblock %}
+  </main>
+  {% block footer %}
+    <footer class="legal-footer">
+      <a href="{% url 'events:privacy-notice' %}">Privacy</a>
+      <a href="{% url 'events:terms' %}">Terms</a>
+    </footer>
+  {% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

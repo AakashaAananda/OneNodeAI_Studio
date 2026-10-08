@@ -1,0 +1,82 @@
+{% extends "openfotos_events/base.html" %}
+{% load static %}
+
+{% block title %}{{ event.name }} · {{ event.photographer.display_name }}{% endblock %}
+
+{% block header %}
+  <header class="gallery-topbar">
+    <div class="gallery-brand">
+      <span class="gallery-brand-mark">{{ event.photographer.display_name }}</span>
+      <span class="gallery-event-name">{{ event.name }}</span>
+    </div>
+    <nav class="sub-event-filters" aria-label="Gallery sub-events">
+      <a {% if not selected_sub_event %}aria-current="page"{% endif %} href="{% url gallery_route route_identifier %}#gallery">All</a>
+      {% for sub_event in sub_events %}<a {% if selected_sub_event.id == sub_event.id %}aria-current="page"{% endif %} href="{% url sub_event_route route_identifier sub_event.id %}#gallery">{{ sub_event.name }}</a>{% endfor %}
+    </nav>
+    <div class="gallery-actions">
+      {% if search_mode %}
+        <form method="post" action="{% url clear_search_route route_identifier search_result.id %}">
+          {% csrf_token %}
+          <button type="submit" class="icon-button" aria-label="Clear search" title="Clear search">
+            <img src="{% static 'openfotos_events/icons/close.svg' %}" alt="">
+          </button>
+        </form>
+      {% else %}
+        <details class="gallery-search"{% if search_form.errors or search_form.non_field_errors %} open{% endif %}>
+          <summary class="icon-button" aria-label="Search with your face" title="Search with your face">
+            <img src="{% static 'openfotos_events/icons/face.svg' %}" alt="">
+          </summary>
+          <div class="gallery-search-panel">
+            <h2>Search with your face</h2>
+            <p>Use one clear face. The reference photo and its one-time search data are discarded after processing.</p>
+            {% if selected_sub_event %}
+              <form method="post" enctype="multipart/form-data" action="{% url sub_event_search_route route_identifier selected_sub_event.id %}" novalidate>
+            {% else %}
+              <form method="post" enctype="multipart/form-data" action="{% url search_route route_identifier %}" novalidate>
+            {% endif %}
+              {% csrf_token %}
+              {% if search_form.non_field_errors %}<div class="form-error" role="alert">{{ search_form.non_field_errors }}</div>{% endif %}
+              <label for="{{ search_form.reference_photo.id_for_label }}">{{ search_form.reference_photo.label }}</label>
+              {{ search_form.reference_photo }}
+              {% if search_form.reference_photo.errors %}<div class="field-error" role="alert">{{ search_form.reference_photo.errors }}</div>{% endif %}
+              <label class="checkbox-label">{{ search_form.consent }} <span>{{ search_form.consent.label }}</span></label>
+              {% if search_form.consent.errors %}<div class="field-error" role="alert">{{ search_form.consent.errors }}</div>{% endif %}
+              <button type="submit">Search this gallery</button>
+            </form>
+          </div>
+        </details>
+      {% endif %}
+    </div>
+  </header>
+{% endblock %}
+
+{% block hero %}
+  {% if cover_url %}
+    <section class="gallery-hero" aria-label="{{ event.name }}">
+      <img class="cover-image" src="{{ cover_url }}" alt="">
+      <div class="cover-copy">
+        <p class="cover-studio">{{ event.photographer.display_name }}</p>
+        <h1>{{ event.name }}</h1>
+        <a class="cover-action" href="#gallery">View gallery</a>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="gallery-body" id="gallery">
+    {% if search_mode %}
+      <section class="gallery-notice" aria-live="polite">
+        <div>
+          <h2>{{ page.paginator.count }} matching photo{{ page.paginator.count|pluralize }}</h2>
+          <p>Results are ranked by the closest match. Difficult photos may be missed and extra photos may appear. <a href="{% url gallery_route route_identifier %}">Clear search</a> to return to the full gallery.</p>
+        </div>
+        <form method="post" action="{% url clear_search_route route_identifier search_result.id %}">
+          {% csrf_token %}
+          <button type="submit" class="button-secondary">Clear search</button>
+        </form>
+      </section>
+    {% endif %}
+    {% include "openfotos_events/gallery_grid.html" %}
+  </div>
+{% endblock %}
